@@ -1,4 +1,4 @@
-import React from 'react'
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { useSelector } from 'react-redux';
 import Homepage from './pages/Homepage';
@@ -8,13 +8,19 @@ import TeacherDashboard from './pages/teacher/TeacherDashboard';
 import LoginPage from './pages/LoginPage';
 import AdminRegisterPage from './pages/admin/AdminRegisterPage';
 import ChooseUser from './pages/ChooseUser';
+import PaymentPage from './pages/student/PaymentPage'; // Import PaymentPage
+import { loadStripe } from '@stripe/stripe-js'; // Import Stripe elements
+import { Elements } from '@stripe/react-stripe-js';
+
+// Initialize Stripe
+const stripePromise = loadStripe('your-publishable-key');
 
 const App = () => {
   const { currentRole } = useSelector(state => state.user);
 
   return (
     <Router>
-      {currentRole === null &&
+      {currentRole === null && (
         <Routes>
           <Route path="/" element={<Homepage />} />
           <Route path="/choose" element={<ChooseUser visitor="normal" />} />
@@ -26,28 +32,43 @@ const App = () => {
 
           <Route path="/Adminregister" element={<AdminRegisterPage />} />
 
-          <Route path='*' element={<Navigate to="/" />} />
-        </Routes>}
+          <Route path="*" element={<Navigate to="/" />} />
+        </Routes>
+      )}
 
-      {currentRole === "Admin" &&
+      {currentRole === "Admin" && (
         <>
           <AdminDashboard />
         </>
-      }
+      )}
 
-      {currentRole === "Student" &&
+      {currentRole === "Student" && (
         <>
-          <StudentDashboard />
+          <Routes>
+            <Route path="/student/dashboard" element={<StudentDashboard />} />
+            
+            {/* Wrap the PaymentPage in the Elements provider */}
+            <Route
+              path="/payment"
+              element={
+                <Elements stripe={stripePromise}>
+                  <PaymentPage />
+                </Elements>
+              }
+            />
+            
+            <Route path="*" element={<Navigate to="/student/dashboard" />} />
+          </Routes>
         </>
-      }
+      )}
 
-      {currentRole === "Teacher" &&
+      {currentRole === "Teacher" && (
         <>
           <TeacherDashboard />
         </>
-      }
+      )}
     </Router>
-  )
+  );
 }
 
-export default App
+export default App;
